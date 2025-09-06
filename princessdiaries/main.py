@@ -20,8 +20,8 @@ def princess_diaries():
         all_stations.add(r['connection'][1])
     nv = max(all_stations) + 1 if all_stations else 1
 
-    inf = float('inf')
-    dist = [[inf] * nv for _ in range(nv)]
+    INF = 10**9
+    dist = [[INF] * nv for _ in range(nv)]
     for i in range(nv):
         dist[i][i] = 0
     for r in subway:
@@ -33,7 +33,11 @@ def princess_diaries():
     # Floyd-Warshall
     for k in range(nv):
         for i in range(nv):
+            if dist[i][k] == INF:
+                continue
             for j in range(nv):
+                if dist[k][j] == INF:
+                    continue
                 if dist[i][k] + dist[k][j] < dist[i][j]:
                     dist[i][j] = dist[i][k] + dist[k][j]
 
@@ -50,7 +54,7 @@ def princess_diaries():
     names = [t['name'] for t in tasks_sorted]
 
     dp_score = [0] * m
-    dp_cost = [inf] * m
+    dp_cost = [INF] * m
     prev = [-1] * m
 
     for i in range(m):
@@ -68,7 +72,7 @@ def princess_diaries():
 
     max_score = max(dp_score) if dp_score else 0
 
-    min_fee = inf
+    min_fee = INF
     best_end = -1
     for i in range(m):
         if dp_score[i] == max_score:
