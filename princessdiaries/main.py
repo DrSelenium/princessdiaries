@@ -1,8 +1,22 @@
 from flask import Flask, request
-import sys
 import os
+import heapq
 
 app = Flask(__name__)
+
+def dijkstra(dist, nv, start):
+    distances = [float('inf')] * nv
+    distances[start] = 0
+    pq = [(0, start)]
+    while pq:
+        curr_dist, u = heapq.heappop(pq)
+        if curr_dist > distances[u]:
+            continue
+        for v in range(nv):
+            if dist[u][v] != float('inf') and curr_dist + dist[u][v] < distances[v]:
+                distances[v] = curr_dist + dist[u][v]
+                heapq.heappush(pq, (distances[v], v))
+    return distances
 
 @app.route('/princess-diaries', methods=['POST'])
 def princess_diaries():
@@ -30,16 +44,8 @@ def princess_diaries():
         dist[u][v] = min(dist[u][v], fee)
         dist[v][u] = min(dist[v][u], fee)
 
-    # Floyd-Warshall
-    for k in range(nv):
-        for i in range(nv):
-            if dist[i][k] == INF:
-                continue
-            for j in range(nv):
-                if dist[k][j] == INF:
-                    continue
-                if dist[i][k] + dist[k][j] < dist[i][j]:
-                    dist[i][j] = dist[i][k] + dist[k][j]
+    # Precompute all-pairs shortest paths using Dijkstra from each station
+    all_pairs_dist = [[dijkstra(dist, nv, i)[j] for j in range(nv)] for i in range(nv)]
 
     # Sort tasks by start time
     tasks_sorted = sorted(tasks, key=lambda x: x['start'])
@@ -59,16 +65,27 @@ def princess_diaries():
 
     for i in range(m):
         dp_score[i] = scores[i]
-        dp_cost[i] = dist[starting_station][stations_list[i]]
+        dp_cost[i] = all_pairs_dist[starting_station][stations_list[i]]
         prev[i] = -1
-        for j in range(i):
-            if ends[j] <= starts[i]:
-                cand_score = dp_score[j] + scores[i]
-                cand_cost = dp_cost[j] + dist[stations_list[j]][stations_list[i]]
-                if cand_score > dp_score[i] or (cand_score == dp_score[i] and cand_cost < dp_cost[i]):
-                    dp_score[i] = cand_score
-                    dp_cost[i] = cand_cost
-                    prev[i] = j
+        # Binary search for the last non-overlapping task
+        left, right = 0, i
+        last_valid = -1
+        while left <= right:
+            mid = (left + right) // 2
+            if ends[mid] <= starts[i]:
+                last_valid = mid
+                left = mid + 1
+            else:
+                right = mid - 1
+        for j in range(last_valid + 1):
+            if j < 0:
+                continue
+            cand_score = dp_score[j] + scores[i]
+            cand_cost = dp_cost[j] + all_pairs_dist[stations_list[j]][stations_list[i]]
+            if cand_score > dp_score[i] or (cand_score == dp_score[i] and cand_cost < dp_cost[i]):
+                dp_score[i] = cand_score
+                dp_cost[i] = cand_cost
+                prev[i] = j
 
     max_score = max(dp_score) if dp_score else 0
 
@@ -76,7 +93,7 @@ def princess_diaries():
     best_end = -1
     for i in range(m):
         if dp_score[i] == max_score:
-            this_fee = dp_cost[i] + dist[stations_list[i]][starting_station]
+            this_fee = dp_cost[i] + all_pairs_dist[stations_list[i]][starting_station]
             if this_fee < min_fee:
                 min_fee = this_fee
                 best_end = i

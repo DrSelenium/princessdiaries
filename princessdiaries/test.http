@@ -1,0 +1,79 @@
+### Test Case 1: No tasks
+POST http://localhost:5000/princess-diaries
+Content-Type: application/json
+
+{
+  "tasks": [],
+  "subway": [{"connection": [0, 1], "fee": 5}],
+  "starting_station": 0
+}
+
+###
+
+### Test Case 2: Single task
+POST http://localhost:5000/princess-diaries
+Content-Type: application/json
+
+{
+  "tasks": [{"name": "Task1", "station": 1, "start": 0, "end": 10, "score": 100}],
+  "subway": [{"connection": [0, 1], "fee": 5}],
+  "starting_station": 0
+}
+
+###
+
+### Test Case 3: Multiple tasks, no conflicts
+POST http://localhost:5000/princess-diaries
+Content-Type: application/json
+
+{
+  "tasks": [
+    {"name": "Task1", "station": 1, "start": 0, "end": 5, "score": 10},
+    {"name": "Task2", "station": 2, "start": 6, "end": 10, "score": 20}
+  ],
+  "subway": [
+    {"connection": [0, 1], "fee": 5},
+    {"connection": [1, 2], "fee": 10}
+  ],
+  "starting_station": 0
+}
+
+###
+
+### Test Case 4: Conflicting tasks
+POST http://localhost:5000/princess-diaries
+Content-Type: application/json
+
+{
+  "tasks": [
+    {"name": "Task1", "station": 1, "start": 0, "end": 5, "score": 10},
+    {"name": "Task2", "station": 2, "start": 3, "end": 8, "score": 15}
+  ],
+  "subway": [
+    {"connection": [0, 1], "fee": 5},
+    {"connection": [0, 2], "fee": 7}
+  ],
+  "starting_station": 0
+}
+
+###
+
+### Test Case 5: Large graph
+POST http://localhost:5000/princess-diaries
+Content-Type: application/json
+
+{
+  "tasks": [
+    {"name": "Task1", "station": 1, "start": 0, "end": 10, "score": 50},
+    {"name": "Task2", "station": 3, "start": 11, "end": 20, "score": 60}
+  ],
+  "subway": [
+    {"connection": [0, 1], "fee": 5},
+    {"connection": [1, 2], "fee": 10},
+    {"connection": [2, 3], "fee": 15},
+    {"connection": [0, 3], "fee": 25}
+  ],
+  "starting_station": 0
+}
+
+###
