@@ -1,5 +1,6 @@
 from flask import Flask, request
 import sys
+import os
 
 app = Flask(__name__)
 
@@ -90,4 +91,5 @@ def princess_diaries():
     return {"max_score": max_score, "min_fee": int(min_fee), "schedule": sch}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
